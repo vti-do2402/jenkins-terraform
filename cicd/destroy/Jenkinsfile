@@ -1,0 +1,85 @@
+pipeline {
+    agent {
+        label 'infra'
+    }
+
+    environment {
+        GIT_URL = 'git@github.com:mushz0310/do2402-vutienquang.git'
+        GIT_KEY_ID = 'github-ssh-key'
+        BASE_DIR = 'hw-3-jenkins-tf'
+        TF_DIR = '${BASE_DIR}/terraform'
+        TF_VERSION = '1.10'
+        TERRAFORM = "docker run --rm -v ${TF_DIR}:/app -w /app hashicorp/terraform:${TF_VERSION}"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                sh "echo 'Cloning the repository...'"
+                checkout scmGit([name: "$branch", credentialId: "${GIT_KEY_ID}", url: "${GIT_URL}"])
+                sh 'ls -la'
+            }
+        }
+
+        stage('Terraform Prepares') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh "${TERRAFORM} init -upgrade"
+                }
+            }
+        }
+
+        stage('Terraform Destroy Plan') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh "${TERRAFORM} plan -destroy"
+                }
+            }
+            post {
+                success {
+                    emailext (
+                        to: 'vtq231@gmail.com',
+                        subject: "Approval Required: Terraform Plan for Job '${env.JOB_NAME}' (${env.BUILD_NUMBER})",
+                        body: """
+                            <p>The Terraform Plan for Job <b>'${env.JOB_NAME}'</b> is ready for review.</p>
+                            <p>Please go to <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to approve or reject the build.</p>
+                            """,
+                        mimeType: "text/html"
+                    )
+                }
+            }
+        }
+
+        stage('Approval') {
+            steps {
+                script {
+                    input message: "Do you want to proceed with the Terraform Destroy?",
+                          ok: "Yes, Destroy",
+                          parameters: []
+                }
+            }
+        }
+
+        stage('Terraform Destroy') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh "${TERRAFORM} destroy -auto-approve"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        failure {
+            emailext (
+                to: 'vtq231@gmail.com',
+                subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """<p>Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed.</p><p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a></p>""",
+                mimeType: 'text/html'
+            )
+        }
+    }
+}
