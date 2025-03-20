@@ -20,6 +20,14 @@ pipeline {
 
     stages {
 
+        stage('Checkout Code') {
+            steps {
+                    sh "echo 'Cloning the repository...'"
+                    checkout scmGit(branches: [[name: "$branch"]], extensions: [], userRemoteConfigs: [[credentialsId: "${GIT_KEY_ID}", url: "$git_url"]])
+                    sh 'ls -la'
+            }
+        }
+
         stage('AWS Login') {
             steps {
                 script {
@@ -34,14 +42,6 @@ pipeline {
                         '''
                     }
                 }
-            }
-        }
-
-        stage('Checkout Code') {
-            steps {
-                    sh "echo 'Cloning the repository...'"
-                    checkout scmGit(branches: [[name: "$branch"]], extensions: [], userRemoteConfigs: [[credentialsId: "${GIT_KEY_ID}", url: "$git_url"]])
-                    sh 'ls -la'
             }
         }
 
