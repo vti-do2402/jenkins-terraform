@@ -28,22 +28,22 @@ pipeline {
             }
         }
 
-        stage('AWS Login') {
-            steps {
-                script {
-                    withCredentials([aws(
-                        credentialsId: 'aws-credentials-demo',
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                    )]) {
-                        sh '''
-                        echo "✅ AWS Credentials Configured"
-                        aws sts get-caller-identity
-                        '''
-                    }
-                }
-            }
-        }
+        // stage('AWS Login') {
+        //     steps {
+        //         script {
+        //             withCredentials([aws(
+        //                 credentialsId: 'aws-credentials-demo',
+        //                 accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+        //                 secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+        //             )]) {
+        //                 sh '''
+        //                 echo "✅ AWS Credentials Configured"
+        //                 aws sts get-caller-identity
+        //                 '''
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Terraform Initialize') {
             steps {
