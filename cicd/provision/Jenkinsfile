@@ -12,11 +12,9 @@ pipeline {
         // GIT_KEY_ID = 'github-ssh-key'
         AWS_ACCESS_KEY_ID     = credentials('aws-secret-key-id')
         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-        BASE_DIR = 'hw-3-jenkins-tf'
+        BASE_DIR = ''
         TF_DIR = '${BASE_DIR}/terraform'
-        TF_VERSION = '1.10'
-        TERRAFORM = "docker run --rm -v ${TF_DIR}:/app -w /app hashicorp/terraform:${TF_VERSION}"
-    }
+   }
 
     stages {
         // stage('Checkout Code') {
@@ -29,12 +27,12 @@ pipeline {
         //     }
         // }
 
-        stage('Terraform Prepares') {
+        stage('Terraform Initialize') {
             steps {
                 dir("${TF_DIR}") {
-                    sh "${TERRAFORM} init -upgrade"
-                    sh "${TERRAFORM} fmt"
-                    sh "${TERRAFORM} validate"
+                    sh "terraform init -upgrade"
+                    sh "terraform fmt"
+                    sh "terraform validate"
                 }
             }
         }
@@ -42,7 +40,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 dir("${TF_DIR}") {
-                    sh "${TERRAFORM} plan"
+                    sh "terraform plan"
                 }
             }
            post {

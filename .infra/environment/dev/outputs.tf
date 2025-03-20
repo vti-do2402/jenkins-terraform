@@ -1,44 +1,37 @@
 output "vpc_id" {
-  value = module.jenkins_vpc.vpc.vpc_id
+  value       = module.vpc.vpc_id
   description = "The ID of the Jenkins VPC"
 }
 
 # Output Public Subnets
 output "public_subnets" {
-  value       = module.jenkins_vpc.vpc.public_subnets
+  value       = module.vpc.public_subnet_ids
   description = "List of public subnet IDs in the Jenkins VPC"
 }
 
-# Output the public IP of the Jenkins Master
-output "jenkins_master_public_ip" {
-  value       = module.jenkins_master.public_ip
-  description = "The public IP address of the Jenkins Master instance"
+output "security_group_id" {
+  value       = module.vpc.jenkins_security_group_id
+  description = "Security Group ID for Jenkins"
 }
 
-# Output the public IP of the Jenkins Master
-output "jenkins_master_private_ip" {
-  value       = module.jenkins_master.private_ip
-  description = "The private IP address of the Jenkins Master instance"
+output "jenkins_master" {
+  value = {
+    instance_id  = module.jenkins_master.instance_id
+    public_ip    = module.jenkins_master.public_ip
+    private_ip   = module.jenkins_master.private_ip
+    ssh_key_path = module.jenkins_master.ssh_key_path
+  }
+  description = "Jenkins Master instance details"
 }
 
-# Output Jenkins Master Security Group ID
-output "jenkins_master_security_group_id" {
-  value       = module.jenkins_master.security_group_id
-  description = "Security Group ID for the Jenkins Master instance"
-}
-
-# Conditional Output for Jenkins Agent (Only if `var.run_agent` is true)
-output "jenkins_agent_public_ip" {
-  value       = var.run_agent ? module.jenkins_agent[0].public_ip : null
-  description = "Public IP address of the Jenkins Agent instance (if deployed)"
-}
-
-output "jenkins_agent_private_ip" {
-  value       = var.run_agent ? module.jenkins_agent[0].private_ip : null
-  description = "Private IP address of the Jenkins Agent instance (if deployed)"
-}
-
-output "jenkins_agent_security_group_id" {
-  value       = var.run_agent ? module.jenkins_agent[0].security_group_id : null
-  description = "Security Group ID for the Jenkins Agent instance (if deployed)"
+output "jenkins_agents" {
+  value = {
+    for key, agent in module.jenkins_agents :
+    key => {
+      instance_id = agent.instance_id
+      public_ip   = agent.public_ip
+      private_ip  = agent.private_ip
+    }
+  }
+  description = "Jenkins Agents instance details"
 }

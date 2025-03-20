@@ -31,33 +31,24 @@ variable "admin_ip" {
   type        = string
 }
 
-variable "jenkins_master_instance_type" {
-  description = "Instance type for the Jenkins EC2 instance"
-  type        = string
-  default     = "t2.medium"
+variable "jenkins_master" {
+  description = "Jenkins Master configuration"
+  type = object({
+    instance_type = string
+    key_name      = string
+    volume_size   = number
+    username      = string
+    password      = string
+  })
 }
 
-variable "run_jenkins_master" {
-  type    = bool
-  default = false
+variable "jenkins_agents" {
+  description = "List of Jenkins agents to create"
+  type = list(object({
+    instance_type = string
+    key_name      = string
+  }))
 }
-
-variable "jenkins_agent_instance_type" {
-  description = "Instance type for the Jenkins EC2 instance"
-  type        = string
-  default     = "t2.medium"
-}
-
-variable "jenkins_agent_metadata" {
-  type = map(string)
-
-}
-variable "run_agent" {
-  type    = bool
-  default = false
-}
-
-
 
 variable "tags" {
   description = "Tags to apply to all resources created by this module"

@@ -3,11 +3,13 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-    bucket = "jenkins-terraform-state"
+  bucket = "${local.tags.Owner}-${local.tags.Project}-terraform-state"
 
-    lifecycle {
-      prevent_destroy = false
-    }
+  lifecycle {
+    prevent_destroy = false
+  }
+
+  tags = local.tags
 }
 
 resource "aws_s3_bucket_versioning" "terraform_state" {
@@ -16,7 +18,7 @@ resource "aws_s3_bucket_versioning" "terraform_state" {
   versioning_configuration {
     status = "Enabled"
   }
-  
+
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" {
@@ -30,7 +32,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" 
 }
 
 resource "aws_dynamodb_table" "terraform_state_lock" {
-  name         = "jenkins-terraform-state-lock"
+  name         = "${local.tags.Owner}-${local.tags.Project}-terraform-state-lock"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
 
@@ -38,5 +40,7 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
     name = "LockID"
     type = "S"
   }
+
+  tags = local.tags
 }
 
