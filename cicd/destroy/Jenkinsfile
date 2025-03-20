@@ -4,54 +4,53 @@ pipeline {
     }
 
     parameters{
-        string(name: 'branch', defaultValue: 'main', description: 'Branch to build')
+        string(name: 'branch', defaultValue: 'v2', description: 'Branch to build')
         string(name: 'git_url', defaultValue: 'git@github.com:vti-do2402/jenkins-terraform.git', description: 'Git URL')
     }
 
     environment {
         // GIT_URL = 'git@github.com:mushz0310/do2402-vutienquang.git'
-        GIT_KEY_ID = 'github-ssh-key'
+        GIT_KEY_ID = 'git-ssh-key'
         BASE_DIR = ''
-        TF_DIR = '${BASE_DIR}/terraform'
+        TF_DIR = 'terraform'
         TF_VERSION = '1.10'
         // TERRAFORM = "docker run --rm -v ${TF_DIR}:/app -w /app hashicorp/terraform:${TF_VERSION}"
         TERRAFORM = "terraform"
     }
 
     stages {
+        
         stage('Checkout Code') {
             steps {
-                sh "echo 'Cloning the repository...'"
-                checkout scmGit([name: "$branch", credentialId: "${GIT_KEY_ID}", url: "$git_url"])
-                sh 'ls -la'
+                    sh "echo 'Cloning the repository...'"
+                    checkout scmGit(branches: [[name: "$branch"]], extensions: [], userRemoteConfigs: [[credentialsId: "${GIT_KEY_ID}", url: "$git_url"]])
+                    sh 'ls -la'
             }
         }
 
-        stage('Terraform Prepares') {
-            steps {
+
+        stage('Terraform Initialize') {
+            steps {              
                 dir("${TF_DIR}") {
                     sh "${TERRAFORM} init -upgrade"
+                    sh "${TERRAFORM} fmt"
+                    sh "${TERRAFORM} validate"
                 }
             }
         }
 
-        stage('Terraform Destroy Plan') {
+        stage('Terraform Plan Destroy') {
             steps {
-                dir("${TF_DIR}") {
-                    sh "${TERRAFORM} plan -destroy"
-                }
-            }
-            post {
-                success {
-                    emailext (
-                        to: 'vtq231@gmail.com',
-                        subject: "Approval Required: Terraform Plan for Job '${env.JOB_NAME}' (${env.BUILD_NUMBER})",
-                        body: """
-                            <p>The Terraform Plan for Job <b>'${env.JOB_NAME}'</b> is ready for review.</p>
-                            <p>Please go to <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to approve or reject the build.</p>
-                            """,
-                        mimeType: "text/html"
-                    )
+                script {
+                    withCredentials([aws(
+                        credentialsId: 'aws-credentials-demo',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {                
+                        dir("${TF_DIR}") {
+                            sh "${TERRAFORM} plan -destroy"
+                        }
+                    }
                 }
             }
         }
@@ -59,17 +58,25 @@ pipeline {
         stage('Approval') {
             steps {
                 script {
-                    input message: "Do you want to proceed with the Terraform Destroy?",
-                          ok: "Yes, Destroy",
+                    input message: "Do you want to proceed with the Terraform Apply?",
+                          ok: "Yes, Apply",
                           parameters: []
                 }
             }
         }
 
-        stage('Terraform Destroy') {
+        stage('Terraform Apply') {
             steps {
-                dir("${TF_DIR}") {
-                    sh "${TERRAFORM} destroy -auto-approve"
+                script {
+                    withCredentials([aws(
+                        credentialsId: 'aws-credentials-demo',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {                 
+                        dir("${TF_DIR}") {
+                            sh "${TERRAFORM} apply -auto-approve"
+                        }
+                    }
                 }
             }
         }
@@ -78,14 +85,6 @@ pipeline {
     post {
         always {
             cleanWs()
-        }
-        failure {
-            emailext (
-                to: 'vtq231@gmail.com',
-                subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: """<p>Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed.</p><p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a></p>""",
-                mimeType: 'text/html'
-            )
         }
     }
 }
