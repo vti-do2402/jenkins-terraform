@@ -63,9 +63,11 @@ resource "null_resource" "run_agent" {
       "sudo mkdir -p ${each.value.work_dir}",
       "sudo chown 1000:1000 ${each.value.work_dir}",
       "sudo chmod 775 ${each.value.work_dir}",
-      "echo 'Starting Jenkins agent'",
+      "echo 'Downloading Jenkins agent'",
       "curl -sO http://${module.jenkins_master.private_ip}:8080/jnlpJars/agent.jar",
-      "java -jar agent.jar -url http://${module.jenkins_master.private_ip}:8080 -secret ${each.value.secret} -name ${each.value.name} -workDir ${each.value.work_dir}"
+      "echo 'Starting Jenkins agent in background...'",
+      "nohup java -jar agent.jar -url http://${module.jenkins_master.private_ip}:8080 -secret ${each.value.secret} -name ${each.value.name} -workDir ${each.value.work_dir} > jenkins-agent.log 2>&1 &"
     ]
   }
 }
+

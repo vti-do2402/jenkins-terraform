@@ -3,20 +3,26 @@ pipeline {
         label 'infra'
     }
 
+    parameters{
+        string(name: 'branch', defaultValue: 'main', description: 'Branch to build')
+        string(name: 'git_url', defaultValue: 'git@github.com:vti-do2402/jenkins-terraform.git', description: 'Git URL')
+    }
+
     environment {
-        GIT_URL = 'git@github.com:mushz0310/do2402-vutienquang.git'
+        // GIT_URL = 'git@github.com:mushz0310/do2402-vutienquang.git'
         GIT_KEY_ID = 'github-ssh-key'
-        BASE_DIR = 'hw-3-jenkins-tf'
+        BASE_DIR = ''
         TF_DIR = '${BASE_DIR}/terraform'
         TF_VERSION = '1.10'
-        TERRAFORM = "docker run --rm -v ${TF_DIR}:/app -w /app hashicorp/terraform:${TF_VERSION}"
+        // TERRAFORM = "docker run --rm -v ${TF_DIR}:/app -w /app hashicorp/terraform:${TF_VERSION}"
+        TERRAFORM = "terraform"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 sh "echo 'Cloning the repository...'"
-                checkout scmGit([name: "$branch", credentialId: "${GIT_KEY_ID}", url: "${GIT_URL}"])
+                checkout scmGit([name: "$branch", credentialId: "${GIT_KEY_ID}", url: "$git_url"])
                 sh 'ls -la'
             }
         }
