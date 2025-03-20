@@ -29,12 +29,20 @@ pipeline {
         }
 
 
-        stage('Terraform Initialize') {
-            steps {              
-                dir("${TF_DIR}") {
-                    sh "${TERRAFORM} init -upgrade"
-                    sh "${TERRAFORM} fmt"
-                    sh "${TERRAFORM} validate"
+        stage('Terraform Init') {
+            steps {  
+                script {
+                    withCredentials([aws(
+                        credentialsId: 'aws-credentials-demo',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {              
+                        dir("${TF_DIR}") {
+                            sh "${TERRAFORM} init -upgrade"
+                            sh "${TERRAFORM} fmt"
+                            sh "${TERRAFORM} validate"
+                        }
+                    }
                 }
             }
         }
