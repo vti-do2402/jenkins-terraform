@@ -43,19 +43,6 @@ pipeline {
                     sh "${TERRAFORM} plan"
                 }
             }
-           post {
-                success {
-                    emailext (
-                        to: 'vtq231@gmail.com',
-                        subject: "Approval Required: Terraform Plan for Job '${env.JOB_NAME}' (${env.BUILD_NUMBER})",
-                        body: """
-                            <p>The Terraform Plan for Job <b>'${env.JOB_NAME}'</b> is ready for review.</p>
-                            <p>Please go to <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to approve or reject the build.</p>
-                            """,
-                        mimeType: "text/html"
-                    )
-                }
-            }
         }
 
         stage('Approval') {
@@ -80,14 +67,6 @@ pipeline {
     post {
         always {
             cleanWs()
-        }
-        failure {
-            emailext (
-                to: 'vtq231@gmail.com',
-                subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: """<p>Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed.</p><p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a></p>""",
-                mimeType: 'text/html'
-            )
         }
     }
 }
