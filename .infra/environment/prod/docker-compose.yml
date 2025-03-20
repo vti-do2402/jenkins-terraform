@@ -1,0 +1,13 @@
+services:
+  jenkins-master:
+    container_name: jenkins_master
+    image: bitnami/jenkins:latest
+    environment:
+      - JENKINS_USERNAME=monarch
+      - JENKINS_PASSWORD=123123
+      - JENKINS_PLUGINS=git,workflow-aggregator
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - "./jenkins_data:/bitnami/jenkins"

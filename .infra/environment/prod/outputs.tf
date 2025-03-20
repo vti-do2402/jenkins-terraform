@@ -16,9 +16,10 @@ output "security_group_id" {
 
 output "jenkins_master" {
   value = {
-    instance_id = module.jenkins_master.instance_id
-    public_ip   = module.jenkins_master.public_ip
-    private_ip  = module.jenkins_master.private_ip
+    instance_id  = module.jenkins_master.instance_id
+    public_ip    = module.jenkins_master.public_ip
+    private_ip   = module.jenkins_master.private_ip
+    ssh_key_path = module.jenkins_master.ssh_key_path
   }
   description = "Jenkins Master instance details"
 }

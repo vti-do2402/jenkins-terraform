@@ -3,11 +3,6 @@ variable "aws_region" {
   type        = string
 }
 
-variable "prefix" {
-  description = "Name for the VPC"
-  type        = string
-}
-
 variable "vpc_cidr" {
   description = "Default value for VPC CIDR"
   type        = string
@@ -45,8 +40,13 @@ variable "jenkins_master" {
 variable "jenkins_agents" {
   description = "List of Jenkins agents to create"
   type = list(object({
+    create_ec2    = bool
+    run_agent     = bool
     instance_type = string
     key_name      = string
+    name          = string
+    secret        = string
+    work_dir      = string
   }))
 }
 

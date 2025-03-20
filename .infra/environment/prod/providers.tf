@@ -8,7 +8,7 @@ terraform {
 
   backend "s3" {
     bucket         = "quentin-jenkins-terraform-state"
-    key            = "prod/terraform.tfstate"
+    key            = "dev/terraform.tfstate"
     region         = "us-west-2"
     dynamodb_table = "quentin-jenkins-terraform-state-lock"
   }

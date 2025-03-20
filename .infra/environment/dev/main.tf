@@ -3,7 +3,7 @@ module "vpc" {
   vpc_cidr            = var.vpc_cidr
   availability_zones  = length(var.azs) > 0 ? var.azs : local.azs
   public_subnet_cidrs = var.vpc_public_subnets
-  cluster_name        = "${local.tags.Owner}-${local.tags.Project}"
+  cluster_name        = "${local.prefix}-jenkins"
   admin_ip            = var.admin_ip
 
   tags = merge(local.tags, var.tags)

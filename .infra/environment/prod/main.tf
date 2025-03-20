@@ -3,7 +3,7 @@ module "vpc" {
   vpc_cidr            = var.vpc_cidr
   availability_zones  = length(var.azs) > 0 ? var.azs : local.azs
   public_subnet_cidrs = var.vpc_public_subnets
-  cluster_name        = "${local.tags.Owner}-${local.tags.Project}"
+  cluster_name        = "${local.prefix}-jenkins"
   admin_ip            = var.admin_ip
 
   tags = merge(local.tags, var.tags)
@@ -32,7 +32,7 @@ module "jenkins_agents" {
   depends_on = [module.jenkins_master]
   source     = "../../modules/compute"
 
-  for_each          = { for idx, agent in var.jenkins_agents : idx => agent }
+  for_each          = { for idx, agent in var.jenkins_agents : idx => agent if agent.create_ec2 }
   instance_name     = "${local.prefix}-jenkins-agent-${each.key + 1}"
   ami_id            = data.aws_ami.amazon_linux.id
   instance_type     = each.value.instance_type
@@ -43,3 +43,31 @@ module "jenkins_agents" {
 
   tags = merge(local.tags, var.tags)
 }
+
+resource "null_resource" "run_agent" {
+  depends_on = [module.jenkins_master, module.jenkins_agents]
+
+  # Only create for agents that need to be started
+  for_each = { for idx, agent in var.jenkins_agents : idx => agent if agent.run_agent }
+
+  provisioner "remote-exec" {
+    connection {
+      host        = module.jenkins_agents[each.key].public_ip
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file(module.jenkins_agents[each.key].ssh_key_path)
+    }
+
+    inline = [
+      "echo 'Creating work directory'",
+      "sudo mkdir -p ${each.value.work_dir}",
+      "sudo chown 1000:1000 ${each.value.work_dir}",
+      "sudo chmod 775 ${each.value.work_dir}",
+      "echo 'Downloading Jenkins agent'",
+      "curl -sO http://${module.jenkins_master.private_ip}:8080/jnlpJars/agent.jar",
+      "echo 'Starting Jenkins agent in background...'",
+      "nohup java -jar agent.jar -url http://${module.jenkins_master.private_ip}:8080 -secret ${each.value.secret} -name ${each.value.name} -workDir ${each.value.work_dir} > jenkins-agent.log 2>&1 &"
+    ]
+  }
+}
+
