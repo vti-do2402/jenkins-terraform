@@ -74,7 +74,7 @@ pipeline {
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                     )]) {                 
                         dir("${TF_DIR}") {
-                            sh "${TERRAFORM} apply -auto-approve"
+                            sh "${TERRAFORM} destroy -auto-approve"
                         }
                     }
                 }
