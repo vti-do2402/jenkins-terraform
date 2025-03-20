@@ -66,9 +66,11 @@ pipeline {
         stage('Approval') {
             steps {
                 script {
-                    input message: "Do you want to proceed with the Terraform Apply?",
-                          ok: "Yes, Apply",
-                          parameters: []
+                    timeout(activity: true, time: 30, unit: 'SECONDS') {
+                        input message: "Do you want to proceed with the Terraform Apply?",
+                            ok: "Yes, Apply",
+                            parameters: []
+                    }
                 }
             }
         }
