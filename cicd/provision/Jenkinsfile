@@ -10,7 +10,7 @@ pipeline {
 
     environment {
         // GIT_URL = 'git@github.com:mushz0310/do2402-vutienquang.git'
-        GIT_KEY_ID = 'github-ssh-key'
+        GIT_KEY_ID = 'git-ssh-key'
         BASE_DIR = ''
         TF_DIR = 'terraform'
         TF_VERSION = '1.10'
