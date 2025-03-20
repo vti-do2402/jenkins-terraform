@@ -47,7 +47,7 @@ pipeline {
 
 
         stage('Terraform Initialize') {
-            steps {
+            steps {              
                 dir("${TF_DIR}") {
                     sh "${TERRAFORM} init -upgrade"
                     sh "${TERRAFORM} fmt"
@@ -58,8 +58,16 @@ pipeline {
 
         stage('Terraform Plan') {
             steps {
-                dir("${TF_DIR}") {
-                    sh "${TERRAFORM} plan"
+                script {
+                    withCredentials([aws(
+                        credentialsId: 'aws-credentials-demo',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {                
+                        dir("${TF_DIR}") {
+                            sh "${TERRAFORM} plan"
+                        }
+                    }
                 }
             }
         }
@@ -76,8 +84,16 @@ pipeline {
 
         stage('Terraform Apply') {
             steps {
-                dir("${TF_DIR}") {
-                    sh "${TERRAFORM} apply --auto-approve"
+                script {
+                    withCredentials([aws(
+                        credentialsId: 'aws-credentials-demo',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {                 
+                        dir("${TF_DIR}") {
+                            sh "${TERRAFORM} apply --auto-approve"
+                        }
+                    }
                 }
             }
         }
